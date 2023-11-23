@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python - Scikit Learn Web App</title>
+    {{ bootstrap.load_css() }}
+
+    <script>
+        function createResult(classifier, {accuracy, precision, recall, f1, plot_url}, params){
+            const container = document.getElementById('results');
+            const result = document.createElement('div');
+
+            result.classList.add('card');
+            result.classList.add('col-lg-5');
+            result.classList.add('m-2');
+
+            const h3 = document.createElement('h3');
+            h3.innerHTML = classifier;
+            result.appendChild(h3);
+
+            params.forEach(element => {
+                const p = document.createElement('p');
+                p.innerHTML = `${element.key}: ${element.value}`;
+                result.appendChild(p);
+            });
+
+            const accuracyP = document.createElement('p');
+            accuracyP.innerHTML = `Accuracy: ${accuracy}`;
+            result.appendChild(accuracyP);
+
+            const precisionP = document.createElement('p');
+            precisionP.innerHTML = `Precision: ${precision}`;
+            result.appendChild(precisionP);
+
+            const recallP = document.createElement('p');
+            recallP.innerHTML = `Recall: ${recall}`;
+            result.appendChild(recallP);
+
+            const f1P = document.createElement('p');
+            f1P.innerHTML = `F1-Score: ${f1}`;
+            result.appendChild(f1P);
+
+            const plotImg = document.createElement('img');
+            plotImg.src = `data:image/png;base64,${plot_url}`;
+            plotImg.alt = 'Confusion Matrix';
+            result.appendChild(plotImg);
+
+            const btn = document.createElement('button');
+            btn.classList.add('btn');
+            btn.classList.add('btn-primary');
+            btn.classList.add('mx-auto');
+            btn.classList.add('my-4');
+            btn.innerHTML = 'Salvar';
+            
+            btn.onclick = function(){
+                let a = document.body.appendChild(
+                    document.createElement("a")
+                );
+                a.download = `${classifier}.html`;
+                a.href = "data:text/html," + result.innerHTML; // Grab the HTML
+                a.click(); // Trigger a click on the element
+            }
+
+            result.appendChild(btn);
+
+            container.appendChild(result);
+        }
+
+        
+
+        async function getknnResults(e){
+            e.preventDefault();
+
+            const k_neighbors = document.getElementById('k_neighbors').value;
+            const k_weights = document.getElementById('k_weights').value;
+            const k_algorithm = document.getElementById('k_algorithm').value;
+
+            const data = await fetch('/knn-result', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    k_neighbors: k_neighbors,
+                    k_weights: k_weights,
+                    k_algorithm: k_algorithm
+                })
+            })
+
+            const response = await data.json();
+            createResult("KNN", response, [
+                {key: 'k_neighbors', value: k_neighbors},
+                {key: 'k_weights', value: k_weights},
+                {key: 'k_algorithm', value: k_algorithm}
+            ]);
+        }
+
+        async function getMlpResults(e){
+            e.preventDefault();
+
+            const mlp_hidden_layer_sizes = document.getElementById('mlp_hidden_layer_sizes').value;
+            const mlp_activation = document.getElementById('mlp_activation').value;
+            const mlp_solver = document.getElementById('mlp_solver').value;
+
+            const data = await fetch('/mlp-result', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    mlp_hidden_layer_sizes: mlp_hidden_layer_sizes,
+                    mlp_activation: mlp_activation,
+                    mlp_solver: mlp_solver
+                })
+            })
+
+            const response = await data.json();
+            createResult("MLP", response, [
+                {key: 'mlp_hidden_layer_sizes', value: mlp_hidden_layer_sizes},
+                {key: 'mlp_activation', value: mlp_activation},
+                {key: 'mlp_solver', value: mlp_solver}
+            ]);
+        }
+
+         async function getDtResults(e){
+            e.preventDefault();
+
+            const dt_criterion = document.getElementById('dt_criterion').value;
+            const dt_splitter = document.getElementById('dt_splitter').value;
+            const dt_max_depth = document.getElementById('dt_max_depth').value;
+
+            const data = await fetch('/dt-result', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    dt_criterion: dt_criterion,
+                    dt_splitter: dt_splitter,
+                    dt_max_depth: dt_max_depth
+                })
+            })
+
+            const response = await data.json();
+            createResult("Decision Tree", response, [
+                {key: 'dt_criterion', value: dt_criterion},
+                {key: 'dt_splitter', value: dt_splitter},
+                {key: 'dt_max_depth', value: dt_max_depth}
+            ]);
+        }
+
+         async function getRfResults(e){
+            e.preventDefault();
+
+            const rf_n_estimators = document.getElementById('rf_n_estimators').value;
+            const rf_criterion = document.getElementById('rf_criterion').value;
+            const rf_max_depth = document.getElementById('rf_max_depth').value;
+
+            const data = await fetch('/rf-result', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    rf_n_estimators: rf_n_estimators,
+                    rf_criterion: rf_criterion,
+                    rf_max_depth: rf_max_depth
+                })
+            })
+
+            const response = await data.json();
+            createResult("Random Forest", response, [
+                {key: 'rf_n_estimators', value: rf_n_estimators},
+                {key: 'rf_criterion', value: rf_criterion},
+                {key: 'rf_max_depth', value: rf_max_depth}
+            ]);
+        }
+    </script>
+</head>
+<body>
+    <h1 class="text-center py-3">Scikit Learn Web App</h1>
+    <main class="container-fluid px-4">
+      <div class="row gx-2">
+        <form class="card col mx-2" onsubmit="getknnResults(event)">
+          <div class="card-body">
+            <h5 class="card-title text-center">KNN</h5>
+
+              <!-- campo para o número de vizinhos -->
+            <div class="mb-3">
+                <label class="form-label" for="k_neighbors">Number of Neighbors (KNN):</label>
+                <input class="form-control" type="text" name="k_neighbors" id="k_neighbors" value="5">
+                
+            </div>
+
+            <!-- campo para a seleção do peso -->
+            <div class="mb-3">
+                <label class="form-label" for="k_neighbors">Weight (KNN):</label>
+                <select class="form-select" name="k_weights" id="k_weights">
+                    <option value="uniform">Uniform</option>
+                    <option value="distance">Distance</option>
+                </select>
+                
+            </div>
+
+            <!-- campo para a seleção do peso -->
+            <div class="mb-3">
+                <label class="form-label" for="k_algorithm">Algorithm (KNN):</label>
+                <select class="form-select" name="k_algorithm" id="k_algorithm">
+                    <option value="auto">Auto</option>
+                    <option value="ball_tree">Ball Tree</option>
+                    <option value="kd_tree">KD Tree</option>
+                    <option value="brute">Brute</option>
+                </select>
+                
+            </div>
+
+            <input type="submit" class="btn btn-primary" value="Train and Test">
+          </div>          
+        </form>
+
+        <form class="card col mx-2" onsubmit="getMlpResults(event)">
+          <div class="card-body">
+            <h5 class="card-title text-center">MLP</h5>
+
+              <!-- campo para o tamanho da camada oculta (apenas para o MLP) -->
+            <div class="mb-3">
+                <label class="form-label" for="mlp_hidden_layer_sizes">MLP Hidden Layer Sizes:</label>
+                <input class="form-control" type="text" name="mlp_hidden_layer_sizes" id="mlp_hidden_layer_sizes" value="100" placeholder="e.g., 100,50">
+            </div>
+
+            <!-- campo para a seleção da função de ativação -->
+            <div class="mb-3">
+                <label class="form-label" for="mlp_activation">Activation:</label>
+                <select class="form-select" name="mlp_activation" id="mlp_activation">
+                    <option value="identity">Identity</option>
+                    <option value="logistic">Logistic</option>
+                    <option value="tanh">Tanh</option>
+                    <option value="relu">Relu</option>
+                </select>
+                
+            </div>
+
+            <!-- campo para a seleção do peso -->
+            <div class="mb-3">
+                <label class="form-label" for="mlp_solver">Algorithm (KNN):</label>
+                <select class="form-select" name="mlp_solver" id="mlp_solver">
+                    <option value="lbfgs">LBFGS</option>
+                    <option value="sgd">SGD</option>
+                    <option value="adam">Adam</option>
+                </select>
+                
+            </div>
+
+            <input type="submit" class="btn btn-primary" value="Train and Test">
+          </div>
+        </form>
+
+        <form class="card col mx-2" onsubmit="getDtResults(event)">
+          <div class="card-body">
+            <h5 class="card-title text-center">Decision Tree</h5>
+
+              <!-- campo para a seleção da função de ativação -->
+            <div class="mb-3">
+                <label class="form-label" for="dt_criterion">Criterion:</label>
+                <select class="form-select" name="dt_criterion" id="dt_criterion">
+                    <option value="gini">Gini</option>
+                    <option value="entropy">Entropy</option>
+                    <option value="log_loss">Log loss</option>
+                </select>
+                
+            </div>
+
+            <!-- campo para a seleção do peso -->
+            <div class="mb-3">
+                <label class="form-label" for="dt_splitter">Splitter:</label>
+                <select class="form-select" name="dt_splitter" id="dt_splitter">
+                    <option value="best">Best</option>
+                    <option value="random">Random</option>
+                </select>
+                
+            </div>
+
+            <!-- campo para o tamanho da camada oculta (apenas para o MLP) -->
+            <div class="mb-3">
+                <label class="form-label" for="dt_max_depth">DT Max Depth:</label>
+                <input class="form-control" type="text" name="dt_max_depth" id="dt_max_depth">
+            </div>
+
+            <input type="submit" class="btn btn-primary" value="Train and Test">
+          </div>
+        </form>
+
+        <form class="card col mx-2" onsubmit="getRfResults(event)">
+          <div class="card-body">
+            <h5 class="card-title text-center">Random Forest</h5>
+
+            <!-- campo para a seleção da função de ativação -->
+            <div class="mb-3">
+                <label class="form-label" for="rf_n_estimators">N_Estimators:</label>
+                <input class="form-control" type="text" name="rf_n_estimators" id="rf_n_estimators" value="100">
+               
+            </div>
+
+            <!-- campo para a seleção do peso -->
+            <div class="mb-3">
+                <label class="form-label" for="rf_criterion">Criterion:</label>
+                <select class="form-select" name="rf_criterion" id="rf_criterion">
+                    <option value="gini">Gini</option>
+                    <option value="entropy">Entropy</option>
+                    <option value="log_loss">Log loss</option>
+                </select>
+                
+            </div>
+
+            <!-- campo para o tamanho da camada oculta (apenas para o MLP) -->
+            <div class="mb-3">
+                <label class="form-label" for="rf_max_depth">RF Max Depth:</label>
+                <input class="form-control" type="text" name="rf_max_depth" id="rf_max_depth">
+            </div>
+
+            <input type="submit" class="btn btn-primary" value="Train and Test">
+          </div>
+        </form>
+      </div>
+
+      <section class="row g-2 my-4" id="results"></section>
+    </main>
+   
+   
+    {{ bootstrap.load_js() }}
+</body>
+</html>
